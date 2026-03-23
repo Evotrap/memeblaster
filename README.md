@@ -10,7 +10,7 @@
 
 ## Pour tes amis (ultra simple)
 
-1. Télécharge `MemeBlaster Setup 1.0.0.exe`
+1. Télécharge `MemeBlaster Setup 1.1.0.exe`
 2. Double-clique → installe
 3. L'app s'ouvre → colle le **Token du bot** + l'**ID du channel**
 4. Clique **Connecter** → c'est bon !
