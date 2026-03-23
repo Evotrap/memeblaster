@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>MemeBlaster – Configuration</title>
+<style>
+  :root {
+    --bg:      #0d0d1a;
+    --surface: #14142a;
+    --border:  rgba(114,137,218,0.18);
+    --accent:  #5865f2;
+    --accent2: #7289da;
+    --text:    #e2e2f0;
+    --muted:   #7b7b9d;
+    --red:     #ed4245;
+    --green:   #57f287;
+    --yellow:  #fee75c;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) transparent;
+  }
+
+  .hero {
+    background: linear-gradient(160deg, #1a1a3e 0%, #0d0d1a 100%);
+    padding: 24px 28px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .hero-icon { font-size: 40px; line-height:1; }
+  .hero-text h1 { font-size: 21px; font-weight: 800; letter-spacing: -.5px; }
+  .hero-text p  { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  .status-pill {
+    margin-left: auto;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid;
+  }
+  .status-pill.ok   { background: rgba(87,242,135,.1); color: var(--green); border-color: rgba(87,242,135,.25); }
+  .status-pill.fail { background: rgba(237,66,69,.1);  color: var(--red);   border-color: rgba(237,66,69,.25); }
+  .status-pill.idle { background: rgba(114,137,218,.1); color: var(--accent2); border-color: var(--border); }
+  .dot { width:7px; height:7px; border-radius:50%; background:currentColor; }
+
+  .content { padding: 18px 28px 28px; display: flex; flex-direction: column; gap: 16px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+  }
+  .card-header {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--accent2);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .steps { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .steps li { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: #c0c0d8; line-height: 1.5; }
+  .step-num {
+    min-width: 20px; height: 20px;
+    background: var(--accent); border-radius: 50%;
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items:center; justify-content:center;
+    flex-shrink: 0; margin-top: 2px;
+  }
+  .badge {
+    display: inline-block;
+    background: rgba(88,101,242,.2);
+    color: var(--accent2);
+    border: 1px solid rgba(88,101,242,.3);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 11px;
+    font-family: 'Consolas', monospace;
+    white-space: nowrap;
+  }
+  a { color: var(--accent2); text-decoration: none; cursor: pointer; }
+  a:hover { text-decoration: underline; }
+
+  label {
+    display: block;
+    font-size: 12px; font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase; letter-spacing: .8px;
+    margin-bottom: 6px; margin-top: 14px;
+  }
+  label:first-of-type { margin-top: 0; }
+
+  .input-wrap { position: relative; }
+  input[type=text], input[type=password] {
+    width: 100%;
+    padding: 10px 40px 10px 13px;
+    background: rgba(0,0,0,0.35);
+    border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 13.5px;
+    font-family: 'Consolas', monospace;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(88,101,242,.15); }
+  input::placeholder { color: #444; }
+
+  .eye-btn {
+    position: absolute; right: 10px; top: 50%;
+    transform: translateY(-50%);
+    background: none; border: none;
+    color: var(--muted); cursor: pointer;
+    font-size: 16px; padding: 2px; line-height: 1;
+  }
+  .hint { font-size: 11px; color: var(--muted); margin-top: 5px; }
+
+  .btn-row { display: flex; gap: 10px; margin-top: 14px; }
+  .btn {
+    flex: 1; padding: 11px 14px;
+    border: none; border-radius: 9px;
+    font-size: 13.5px; font-weight: 700;
+    cursor: pointer; transition: all .18s;
+    display: flex; align-items:center; justify-content:center; gap: 6px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #5865f2, #7289da);
+    color: #fff;
+    box-shadow: 0 4px 18px rgba(88,101,242,.35);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(88,101,242,.45); }
+  .btn-ghost {
+    background: rgba(255,255,255,.06);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    font-size: 12.5px;
+  }
+  .btn-ghost:hover { background: rgba(255,255,255,.1); color: var(--text); }
+  .btn-yellow {
+    background: rgba(254,231,92,.1);
+    color: var(--yellow);
+    border: 1px solid rgba(254,231,92,.25);
+    font-size: 12.5px;
+    flex: none;
+    padding: 11px 16px;
+  }
+  .btn-yellow:hover { background: rgba(254,231,92,.2); }
+
+  .alert {
+    display: none;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    margin-top: 10px;
+  }
+  .alert.success { background: rgba(87,242,135,.1); border: 1px solid rgba(87,242,135,.25); color: var(--green); }
+  .alert.error   { background: rgba(237,66,69,.1);  border: 1px solid rgba(237,66,69,.25);  color: var(--red); }
+  .alert.info    { background: rgba(114,137,218,.1); border: 1px solid rgba(114,137,218,.25); color: var(--accent2); }
+
+  /* Log box */
+  .log-box {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    font-family: 'Consolas', monospace;
+    color: #888;
+    min-height: 36px;
+    margin-top: 10px;
+    line-height: 1.6;
+    max-height: 80px;
+    overflow-y: auto;
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-icon">🎉</div>
+  <div class="hero-text">
+    <h1>MemeBlaster</h1>
+    <p>Bombarde tes amis de memes via Discord</p>
+  </div>
+  <div class="status-pill idle" id="statusPill">
+    <span class="dot"></span>
+    <span id="statusText">En attente</span>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- Guide -->
+  <div class="card">
+    <div class="card-header">🤖 Créer le bot Discord (1 fois pour tout le groupe)</div>
+    <ol class="steps">
+      <li><span class="step-num">1</span><span>Va sur <a onclick="openUrl('https://discord.com/developers/applications')">discord.com/developers/applications</a> → <strong>New Application</strong></span></li>
+      <li><span class="step-num">2</span><span>Onglet <span class="badge">Bot</span> → <span class="badge">Add Bot</span> → <strong>Reset Token</strong> → copie-le</span></li>
+      <li><span class="step-num">3</span><span>Active <strong>Message Content Intent</strong> dans <span class="badge">Privileged Gateway Intents</span></span></li>
+      <li><span class="step-num">4</span><span>Onglet <span class="badge">OAuth2 → URL Generator</span> : coche <span class="badge">bot</span> + <span class="badge">applications.commands</span> → permission <span class="badge">Read Messages</span> → invite le bot</span></li>
+      <li><span class="step-num">5</span><span>Dans Discord : <span class="badge">Paramètres → Avancés → Mode développeur</span> → clic droit channel → <strong>Copier l'identifiant</strong></span></li>
+    </ol>
+  </div>
+
+  <!-- Formulaire config -->
+  <div class="card">
+    <div class="card-header">⚙️ Configuration</div>
+
+    <label>Token du Bot</label>
+    <div class="input-wrap">
+      <input type="password" id="botToken" placeholder="MTEx... (secret)">
+      <button class="eye-btn" onclick="toggleVis()">👁</button>
+    </div>
+    <p class="hint">⚠️ Ne montre ce token qu'à tes amis de confiance</p>
+
+    <label>ID du Channel Discord</label>
+    <input type="text" id="channelId" placeholder="123456789012345678">
+    <p class="hint">Le channel Discord que le bot va surveiller</p>
+
+    <div class="alert" id="alertBox"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveConfig()">💾 Connecter le bot</button>
+      <button class="btn btn-ghost" onclick="sendTest()">🧪 Test</button>
+    </div>
+  </div>
+
+  <!-- Commande /send -->
+  <div class="card">
+    <div class="card-header">⚡ Commande /send</div>
+    <p style="font-size:13px; color:#aaa; margin-bottom:12px; line-height:1.5">
+      Si <code style="background:rgba(255,255,255,.07);padding:1px 5px;border-radius:4px;font-size:12px">/send</code> n'apparaît pas dans Discord après connexion, clique ici pour forcer l'enregistrement.
+    </p>
+    <div class="btn-row">
+      <button class="btn btn-yellow" onclick="forceRegister()">⚡ Forcer l'enregistrement de /send</button>
+    </div>
+    <div class="log-box" id="logBox">En attente de connexion...</div>
+  </div>
+
+</div>
+
+<script>
+const { ipcRenderer } = require('electron');
+
+ipcRenderer.send('get-config');
+ipcRenderer.on('config-data', (_e, cfg) => {
+  if (cfg.botToken)  document.getElementById('botToken').value = cfg.botToken;
+  if (cfg.channelId) document.getElementById('channelId').value = cfg.channelId;
+});
+
+ipcRenderer.on('config-saved', () => showAlert('✅ Sauvegardé ! Bot en cours de connexion...', 'success'));
+
+ipcRenderer.on('bot-status', (_e, { connected, tag, error }) => {
+  const pill = document.getElementById('statusPill');
+  const txt  = document.getElementById('statusText');
+  if (connected) {
+    pill.className = 'status-pill ok';
+    txt.textContent = tag || 'Connecté';
+    addLog('🟢 Bot connecté : ' + tag);
+  } else {
+    pill.className = 'status-pill fail';
+    txt.textContent = 'Erreur';
+    if (error) { showAlert('❌ ' + error, 'error'); addLog('🔴 Erreur : ' + error); }
+  }
+});
+
+ipcRenderer.on('bot-log', (_e, msg) => addLog(msg));
+
+ipcRenderer.on('register-result', (_e, { ok, msg }) => {
+  showAlert(msg, ok ? 'success' : 'error');
+  addLog(msg);
+});
+
+function addLog(msg) {
+  const box = document.getElementById('logBox');
+  box.textContent = msg;
+}
+
+function openUrl(url) { ipcRenderer.send('open-url', url); }
+
+function toggleVis() {
+  const inp = document.getElementById('botToken');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+function showAlert(msg, type) {
+  const el = document.getElementById('alertBox');
+  el.textContent = msg;
+  el.className = 'alert ' + type;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 6000);
+}
+
+function saveConfig() {
+  const botToken  = document.getElementById('botToken').value.trim();
+  const channelId = document.getElementById('channelId').value.trim();
+  if (!botToken) return showAlert('❌ Entre le token du bot', 'error');
+  if (!/^\d{17,20}$/.test(channelId)) return showAlert('❌ ID de channel invalide', 'error');
+  ipcRenderer.send('save-config', { botToken, channelId });
+}
+
+function sendTest() { ipcRenderer.send('send-test'); }
+
+function forceRegister() {
+  addLog('⏳ Enregistrement en cours...');
+  ipcRenderer.send('force-register-commands');
+}
+</script>
+</body>
+</html>

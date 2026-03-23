@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head><body>
+<script>
+'use strict';
+const { ipcRenderer } = require('electron');
+const { Client, GatewayIntentBits, Events, REST, Routes, SlashCommandBuilder } = require('discord.js');
+
+let client = null;
+let enabled = true;
+let currentChannelId = null;
+let currentToken = null;
+let botClientId = null;
+
+ipcRenderer.on('set-enabled', (_e, val) => { enabled = val; });
+
+ipcRenderer.on('start-bot', (_e, config) => {
+  enabled = config.enabled !== false;
+  currentChannelId = config.channelId;
+  currentToken = config.botToken;
+  initBot(config.botToken, config.channelId);
+});
+
+// Bouton "Forcer /send" dans setup.html
+ipcRenderer.on('force-register-commands', async () => {
+  if (!currentToken || !botClientId) {
+    ipcRenderer.send('register-result', { ok: false, msg: 'Bot pas encore connecté, attends quelques secondes.' });
+    return;
+  }
+  await registerOnAllGuilds(currentToken, botClientId);
+});
+
+async function registerOnAllGuilds(token, clientId) {
+  const command = new SlashCommandBuilder()
+    .setName('send')
+    .setDescription('Envoie un meme sur le PC de tout le monde')
+    .addStringOption(opt =>
+      opt.setName('texte')
+        .setDescription('Message à afficher')
+        .setRequired(false))
+    .addAttachmentOption(opt =>
+      opt.setName('media')
+        .setDescription('Image, GIF ou vidéo')
+        .setRequired(false));
+
+  const rest = new REST({ version: '10' }).setToken(token);
+
+  try {
+    // Récupère les guilds via l'API REST (fiable, pas de cache)
+    const guilds = await rest.get(Routes.userGuilds());
+    ipcRenderer.send('bot-log', `📡 ${guilds.length} serveur(s) trouvé(s), enregistrement de /send...`);
+
+    let ok = 0;
+    for (const guild of guilds) {
+      try {
+        await rest.put(
+          Routes.applicationGuildCommands(clientId, guild.id),
+          { body: [command.toJSON()] }
+        );
+        ok++;
+      } catch (err) {
+        console.error(`[Bot] Erreur sur ${guild.name}:`, err.message);
+      }
+    }
+
+    const msg = ok > 0
+      ? `✅ /send enregistré sur ${ok} serveur(s) ! Tape / dans Discord.`
+      : '❌ Aucun serveur trouvé. Le bot est bien invité ?';
+
+    ipcRenderer.send('register-result', { ok: ok > 0, msg });
+
+  } catch (err) {
+    ipcRenderer.send('register-result', { ok: false, msg: '❌ Erreur: ' + err.message });
+  }
+}
+
+function buildMemeData(author, avatar, text, attachments, embeds) {
+  let mediaUrl = null;
+  let mediaType = 'text';
+
+  if (attachments && attachments.length > 0) {
+    const att = attachments[0];
+    const ct = att.contentType || '';
+    if (ct.startsWith('image/gif') || att.url.toLowerCase().endsWith('.gif')) {
+      mediaType = 'gif'; mediaUrl = att.url;
+    } else if (ct.startsWith('image/')) {
+      mediaType = 'image'; mediaUrl = att.url;
+    } else if (ct.startsWith('video/')) {
+      mediaType = 'video'; mediaUrl = att.url;
+    }
+  }
+
+  if (!mediaUrl && embeds && embeds.length > 0) {
+    const e = embeds[0];
+    if (e.video?.url)          { mediaType = 'video'; mediaUrl = e.video.url; }
+    else if (e.image?.url)     { mediaType = 'image'; mediaUrl = e.image.url; }
+    else if (e.thumbnail?.url) { mediaType = 'image'; mediaUrl = e.thumbnail.url; }
+  }
+
+  if (!mediaUrl && text) {
+    const m = text.match(/https?:\/\/\S+\.(gif|jpg|jpeg|png|webp|mp4|webm)(\?\S*)?/i);
+    if (m) {
+      const ext = m[1].toLowerCase();
+      mediaType = ext === 'gif' ? 'gif' : ['mp4','webm'].includes(ext) ? 'video' : 'image';
+      mediaUrl = m[0];
+    }
+  }
+
+  return { author, avatar, text, mediaUrl, mediaType, timestamp: Date.now() };
+}
+
+function initBot(token, channelId) {
+  if (client) { try { client.destroy(); } catch(_) {} client = null; }
+
+  client = new Client({
+    intents: [
+      GatewayIntentBits.Guilds,
+      GatewayIntentBits.GuildMessages,
+      GatewayIntentBits.MessageContent,
+      GatewayIntentBits.DirectMessages
+    ]
+  });
+
+  client.once(Events.ClientReady, async (c) => {
+    botClientId = c.user.id;
+    ipcRenderer.send('bot-status', { connected: true, tag: c.user.tag });
+    // Enregistre /send automatiquement
+    await registerOnAllGuilds(token, botClientId);
+  });
+
+  // Commande /send (fonctionne depuis n'importe quel channel)
+  client.on(Events.InteractionCreate, async (interaction) => {
+    if (!interaction.isChatInputCommand() || interaction.commandName !== 'send') return;
+    if (!enabled) return;
+
+    const author = interaction.user.displayName || interaction.user.username;
+    const avatar = interaction.user.displayAvatarURL({ size: 128, extension: 'png' });
+    const text   = interaction.options.getString('texte') || '';
+    const media  = interaction.options.getAttachment('media');
+
+    const data = buildMemeData(author, avatar, text, media ? [media] : [], []);
+
+    if (!data.text && !data.mediaUrl) {
+      await interaction.reply({ content: '❌ Mets au moins un texte ou un média !', ephemeral: true });
+      return;
+    }
+
+    ipcRenderer.send('meme-received', data);
+    await interaction.reply({ content: '✅ Meme balancé sur tous les PCs ! 🎉', ephemeral: true });
+  });
+
+  client.on(Events.Error, (err) => {
+    ipcRenderer.send('bot-status', { connected: false, error: err.message });
+  });
+
+  client.login(token).catch((err) => {
+    ipcRenderer.send('bot-status', { connected: false, error: err.message });
+  });
+}
+</script>
+</body></html>

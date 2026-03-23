@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>overlay</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: transparent;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    overflow: hidden;
+  }
+
+  .wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+    animation: popIn .45s cubic-bezier(.34,1.56,.64,1) both;
+    max-width: 90vw;
+    max-height: 90vh;
+    margin-left: 6vw;
+  }
+
+  @keyframes popIn {
+    from { transform: scale(.5) translateY(60px); opacity: 0; filter: blur(10px); }
+    to   { transform: scale(1)  translateY(0);    opacity: 1; filter: blur(0); }
+  }
+  .wrapper.bye {
+    animation: popOut .3s ease-in forwards;
+  }
+  @keyframes popOut {
+    to { transform: scale(.5) translateY(60px); opacity: 0; filter: blur(10px); }
+  }
+
+  /* ─── Barre auteur flottante ─── */
+  .author-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(10,10,20,0.88);
+    border: 1.5px solid rgba(88,101,242,0.45);
+    border-radius: 40px;
+    padding: 8px 22px 8px 8px;
+    backdrop-filter: blur(14px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 20px rgba(88,101,242,0.1);
+  }
+
+  .avatar {
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    background: linear-gradient(135deg,#5865f2,#7289da);
+    display: flex; align-items:center; justify-content:center;
+    font-size: 22px;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 2px solid rgba(88,101,242,0.7);
+  }
+  .avatar img { width:100%; height:100%; object-fit:cover; }
+
+  .author-name {
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+    letter-spacing: -0.3px;
+  }
+
+  /* ─── Texte seul ─── */
+  .text-bubble {
+    background: rgba(10,10,20,0.92);
+    border: 1.5px solid rgba(88,101,242,0.4);
+    border-radius: 24px;
+    padding: 28px 44px;
+    font-size: 38px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.4;
+    text-align: center;
+    max-width: 850px;
+    word-break: break-word;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 20px 70px rgba(0,0,0,0.8);
+    text-shadow: 0 2px 16px rgba(0,0,0,0.9);
+    letter-spacing: -0.5px;
+  }
+
+  /* ─── Média ─── */
+  .media-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .media-wrap img,
+  .media-wrap video {
+    max-width: 82vw;
+    max-height: 68vh;
+    object-fit: contain;
+    border-radius: 18px;
+    box-shadow:
+      0 0 0 2.5px rgba(88,101,242,0.35),
+      0 30px 100px rgba(0,0,0,0.9),
+      0 0 80px rgba(88,101,242,0.12);
+    display: block;
+  }
+
+  /* Caption sous média */
+  .caption {
+    background: rgba(10,10,20,0.88);
+    border: 1.5px solid rgba(88,101,242,0.3);
+    border-radius: 20px;
+    padding: 14px 32px;
+    font-size: 42px;
+    font-weight: 900;
+    color: #fff;
+    text-align: center;
+    max-width: 80vw;
+    word-break: break-word;
+    backdrop-filter: blur(10px);
+    text-shadow: 0 2px 20px rgba(0,0,0,0.95);
+    letter-spacing: -0.5px;
+  }
+
+  /* ─── Barre de progression ─── */
+  .progress {
+    width: 180px;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 2px;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg,#5865f2,#7289da);
+    border-radius: 10px;
+  }
+
+  /* ─── Bouton fermer ─── */
+  .close-btn {
+    position: fixed;
+    top: 20px; right: 24px;
+    width: 42px; height: 42px;
+    border: none;
+    background: rgba(237,66,69,0.18);
+    color: #ed4245;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex; align-items:center; justify-content:center;
+    transition: background .15s;
+    backdrop-filter: blur(8px);
+    border: 1.5px solid rgba(237,66,69,0.3);
+  }
+  .close-btn:hover { background: rgba(237,66,69,0.45); }
+</style>
+</head>
+<body>
+
+<button class="close-btn" onclick="dismiss()">✕</button>
+
+<div class="wrapper" id="wrapper">
+
+  <div class="author-bar">
+    <div class="avatar" id="av">😂</div>
+    <div class="author-name" id="authorName">MemeBlaster</div>
+  </div>
+
+  <div class="text-bubble" id="textBubble" style="display:none"></div>
+  <div class="media-wrap"  id="mediaWrap"  style="display:none"></div>
+  <div class="caption"     id="caption"    style="display:none"></div>
+
+  <div class="progress">
+    <div class="progress-fill" id="bar"></div>
+  </div>
+
+</div>
+
+<script>
+const { ipcRenderer } = require('electron');
+
+const DELAY = 10000;
+let timer = null;
+
+ipcRenderer.on('show-meme', (_e, data) => render(data));
+
+function render({ author, avatar, text, mediaUrl, mediaType }) {
+  // Avatar
+  if (avatar) {
+    const img = document.createElement('img');
+    img.src = avatar;
+    img.onerror = () => { document.getElementById('av').textContent = '😂'; };
+    document.getElementById('av').innerHTML = '';
+    document.getElementById('av').appendChild(img);
+  }
+
+  document.getElementById('authorName').textContent = author || 'Quelqu\'un';
+
+  if (mediaUrl) {
+    const wrap = document.getElementById('mediaWrap');
+    wrap.style.display = 'flex';
+
+    if (mediaType === 'video') {
+      const v = document.createElement('video');
+      v.src = mediaUrl;
+      v.autoplay = true;
+      v.loop = true;
+      v.muted = false;
+      v.controls = true;
+      v.playsInline = true;
+      v.onerror = () => { wrap.style.display = 'none'; };
+      wrap.appendChild(v);
+    } else {
+      const img = document.createElement('img');
+      img.src = mediaUrl;
+      img.onerror = () => { wrap.style.display = 'none'; };
+      wrap.appendChild(img);
+    }
+
+    if (text) {
+      const cap = document.getElementById('caption');
+      cap.textContent = text;
+      cap.style.display = 'block';
+    }
+  } else if (text) {
+    const bubble = document.getElementById('textBubble');
+    bubble.textContent = text;
+    bubble.style.display = 'block';
+  }
+
+  startTimer();
+}
+
+function startTimer() {
+  const bar = document.getElementById('bar');
+  bar.style.transition = 'none';
+  bar.style.width = '100%';
+  requestAnimationFrame(() => {
+    bar.style.transition = `width ${DELAY}ms linear`;
+    bar.style.width = '0%';
+  });
+  timer = setTimeout(dismiss, DELAY);
+}
+
+function stopTimer() {
+  clearTimeout(timer);
+  document.getElementById('bar').style.transition = 'none';
+}
+
+function dismiss() {
+  stopTimer();
+  document.getElementById('wrapper').classList.add('bye');
+  setTimeout(() => ipcRenderer.send('close-overlay'), 300);
+}
+
+document.body.addEventListener('mouseenter', stopTimer);
+document.body.addEventListener('mouseleave', startTimer);
+document.body.addEventListener('click', (e) => {
+  if (e.target === document.body) dismiss();
+});
+</script>
+</body>
+</html>
